@@ -1,0 +1,7 @@
+default:
+  name: <%= ENV['DOCUSEAL_NAME'] || 'Voxtra' %>
+  support_url: <%= ENV['DOCUSEAL_SUPPORT_URL'] || 'mailto:support@docuseal.com' %>
+  logo_png: <%= ENV['DOCUSEAL_LOGO_PNG'] || 'test/Voxtra white_page-0001.jpg' %>
+development: {}
+test: {}
+production: {}

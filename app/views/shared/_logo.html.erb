@@ -1,0 +1,10 @@
+<%
+  logo_path = branding_logo_path
+  width = local_assigns.fetch(:width, 200)
+  height = local_assigns.fetch(:height, 200)
+%>
+<%= image_tag logo_path,
+              class: local_assigns[:class],
+              width: width,
+              height: height,
+              alt: Docuseal.product_name %>
