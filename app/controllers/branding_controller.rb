@@ -5,7 +5,7 @@ class BrandingController < ActionController::Base
     logo_path = source_logo_path
     return head :not_found unless logo_path&.exist?
 
-    send_resized_png(logo_path, size: 200)
+    send_resized_png(logo_path, size: 512, transparent: true)
   end
 
   def favicon
@@ -38,24 +38,36 @@ class BrandingController < ActionController::Base
     ].compact.find(&:exist?)
   end
 
-  def send_resized_png(logo_path, size:)
+  def send_resized_png(logo_path, size:, transparent: false)
     processed = begin
-      ImageProcessing::Vips
-        .source(logo_path.to_s)
-        .loader(fail: true)
-        .colourspace('srgb')
-        .flatten(background: [255, 255, 255])
-        .resize_and_pad(size, size, background: [255, 255, 255])
-        .call
+      pipeline = ImageProcessing::Vips
+                 .source(logo_path.to_s)
+                 .loader(fail: true)
+                 .colourspace('srgb')
+
+      if transparent
+        pipeline = pipeline.resize_to_limit(size, size)
+      else
+        pipeline = pipeline.flatten(background: [255, 255, 255])
+                           .resize_and_pad(size, size, background: [255, 255, 255])
+      end
+
+      pipeline.call
     rescue StandardError => e
       Rails.logger.warn("Branding image processing with Vips failed for #{logo_path}: #{e.class}: #{e.message}")
 
-      ImageProcessing::MiniMagick
-        .source(logo_path.to_s)
-        .loader(fail: true)
-        .flatten
-        .resize_and_pad(size, size, background: [255, 255, 255])
-        .call
+      pipeline = ImageProcessing::MiniMagick
+                 .source(logo_path.to_s)
+                 .loader(fail: true)
+
+      if transparent
+        pipeline = pipeline.resize_to_limit("#{size}x#{size}")
+      else
+        pipeline = pipeline.flatten
+                           .resize_and_pad(size, size, background: 'white')
+      end
+
+      pipeline.call
     end
 
     send_data File.binread(processed.path), type: 'image/png', disposition: 'inline'
