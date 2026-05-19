@@ -17,11 +17,12 @@ FROM ruby:4.0.1-alpine AS webpack
 
 ENV RAILS_ENV=production
 ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 WORKDIR /app
 
 RUN apk add --no-cache nodejs yarn git build-base && \
-    gem install shakapacker
+    gem install shakapacker -v 9.7.0
 
 COPY ./package.json ./yarn.lock ./
 
@@ -38,7 +39,7 @@ COPY ./tailwind.application.config.js ./tailwind.application.config.js
 COPY ./app/javascript ./app/javascript
 COPY ./app/views ./app/views
 
-RUN echo "gem 'shakapacker'" > Gemfile && ./bin/shakapacker
+RUN echo "source 'https://rubygems.org'; gem 'shakapacker', '9.7.0'; gem 'railties'" > Gemfile && ./bin/shakapacker
 
 FROM ruby:4.0.1-alpine AS app
 
@@ -48,7 +49,7 @@ ENV OPENSSL_CONF=/etc/openssl_legacy.cnf
 
 WORKDIR /app
 
-RUN apk add --no-cache libpq vips redis vips-heif onnxruntime
+RUN apk add --no-cache libpq vips redis vips-heif onnxruntime imagemagick
 
 RUN addgroup -g 2000 docuseal && adduser -u 2000 -G docuseal -s /bin/sh -D -h /home/docuseal docuseal
 

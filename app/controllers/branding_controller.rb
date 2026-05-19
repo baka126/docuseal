@@ -42,7 +42,9 @@ class BrandingController < ActionController::Base
     processed = begin
       ImageProcessing::Vips
         .source(logo_path.to_s)
-        .convert('png')
+        .loader(fail: true)
+        .colourspace('srgb')
+        .flatten(background: [255, 255, 255])
         .resize_and_pad(size, size, background: [255, 255, 255])
         .call
     rescue StandardError => e
@@ -50,7 +52,8 @@ class BrandingController < ActionController::Base
 
       ImageProcessing::MiniMagick
         .source(logo_path.to_s)
-        .convert('png')
+        .loader(fail: true)
+        .flatten
         .resize_and_pad(size, size, background: [255, 255, 255])
         .call
     end

@@ -38,16 +38,19 @@ module Branding
         destination = Rails.public_path.join(filename)
         next if up_to_date?(source_path, destination, force:)
 
-        process_to_png(source_path, destination) do |pipeline|
+        process_to_png(source_path, destination, flatten: true) do |pipeline|
           pipeline.resize_and_pad(size[0], size[1], background: [255, 255, 255])
         end
       end
     end
 
-    def process_to_png(source_path, destination)
+    def process_to_png(source_path, destination, flatten: false)
       vips_pipeline = ImageProcessing::Vips
                       .source(source_path.to_s)
-                      .convert('png')
+                      .loader(fail: true)
+                      .colourspace('srgb')
+
+      vips_pipeline = vips_pipeline.flatten(background: [255, 255, 255]) if flatten
 
       yield(vips_pipeline).call(destination: destination.to_s)
     rescue StandardError => e
@@ -55,7 +58,9 @@ module Branding
 
       mini_magick_pipeline = ImageProcessing::MiniMagick
                              .source(source_path.to_s)
-                             .convert('png')
+                             .loader(fail: true)
+
+      mini_magick_pipeline = mini_magick_pipeline.flatten if flatten
 
       yield(mini_magick_pipeline).call(destination: destination.to_s)
     end
