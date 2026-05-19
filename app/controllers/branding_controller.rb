@@ -43,13 +43,13 @@ class BrandingController < ActionController::Base
       pipeline = ImageProcessing::Vips
                  .source(logo_path.to_s)
                  .loader(fail: true)
-                 .colourspace('srgb')
+                 .convert('png')
 
       if transparent
         pipeline = pipeline.resize_to_limit(size, size)
       else
-        pipeline = pipeline.flatten(background: [255, 255, 255])
-                           .resize_and_pad(size, size, background: [255, 255, 255])
+        pipeline = pipeline.flatten(background: 255)
+                           .resize_and_pad(size, size, background: 255)
       end
 
       pipeline.call
@@ -59,6 +59,7 @@ class BrandingController < ActionController::Base
       pipeline = ImageProcessing::MiniMagick
                  .source(logo_path.to_s)
                  .loader(fail: true)
+                 .convert('png')
 
       if transparent
         pipeline = pipeline.resize_to_limit("#{size}x#{size}")
